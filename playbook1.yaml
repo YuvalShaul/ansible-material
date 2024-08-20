@@ -1,0 +1,51 @@
+---
+- name: Install Docker Engine on Amazon Linux 2
+  hosts: docker_grp  # Replace with your inventory group or IP
+  become: yes  # Use sudo to run commands
+  tasks:
+    - name: Update package index
+      yum:
+        name: "*"
+        state: latest
+
+    - name: Install dependencies
+      yum:
+        name:
+          - yum-utils
+          - device-mapper-persistent-data
+          - lvm2
+        state: present
+
+    - name: Add Docker repository
+      yum_repository:
+        name: docker-ce
+        description: Docker CE Stable - $releasever
+        baseurl: https://download.docker.com/linux/centos/7/x86_64/stable
+        gpgcheck: yes
+        gpgkey: https://download.docker.com/linux/centos/gpg
+
+    - name: Install Docker Engine
+      yum:
+        name: docker-ce
+        state: present
+
+    - name: Start Docker service
+      service:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add current user to Docker group
+      user:
+        name: "{{ ansible_user }}"
+        groups: docker
+        append: yes
+      when: ansible_user_id != 'root'
+
+    - name: Verify Docker installation
+      shell: docker --version
+      register: docker_version
+
+    - name: Display Docker version
+      debug:
+        msg: "Docker version installed: {{ docker_version.stdout }}"
