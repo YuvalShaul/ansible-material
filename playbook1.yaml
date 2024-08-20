@@ -29,6 +29,11 @@
         name: docker-ce
         state: present
 
+    - name: Create docker group if it does not exist
+      group:
+        name: docker
+        state: present
+
     - name: Start Docker service
       service:
         name: docker
@@ -40,7 +45,6 @@
         name: "{{ ansible_user }}"
         groups: docker
         append: yes
-      when: ansible_user_id != 'root'
 
     - name: Verify Docker installation
       shell: docker --version
